@@ -3,193 +3,256 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nano Banana Pro - AI 在线试衣</title>
+    <title>Nano Banana Pro - 全参数控制台</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script type="importmap">
-      {
-        "imports": {
-          "@google/generative-ai": "https://esm.run/@google/generative-ai"
-        }
-      }
-    </script>
+    <style>
+        .setting-card { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 1rem; padding: 1.25rem; }
+        .input-style { width: 100%; border: 1px solid #d1d5db; border-radius: 0.5rem; padding: 0.6rem; margin-top: 0.25rem; font-size: 0.875rem; }
+    </style>
 </head>
-<body class="bg-gray-50 min-h-screen font-sans">
-    <div class="max-w-5xl mx-auto py-12 px-4">
-        <header class="text-center mb-12">
-            <h1 class="text-4xl font-black text-gray-900 mb-4">🍌 Nano Banana Virtual Try-On</h1>
-            <p class="text-gray-600">提供一件衣服和一张模特照，AI 自动完成穿搭</p>
-        </header>
-
-        <!-- 设置区 -->
-        <div class="bg-white rounded-3xl shadow-sm border p-6 mb-8 flex flex-wrap items-center gap-4">
-            <div class="flex-1 min-w-[300px]">
-                <label class="block text-xs font-bold text-gray-400 uppercase mb-1">Gemini API Key</label>
-                <input type="password" id="apiKey" class="w-full bg-gray-50 border-none rounded-xl p-3 focus:ring-2 focus:ring-yellow-400" placeholder="粘贴你的 API Key">
+<body class="bg-gray-50 min-h-screen pb-20">
+    <div class="max-w-6xl mx-auto px-4 pt-10">
+        <div class="flex flex-col md:flex-row justify-between items-end mb-8 gap-4">
+            <div>
+                <h1 class="text-3xl font-black text-gray-900">🍌 Nano Banana Pro 控制台</h1>
+                <p class="text-gray-500">自定义全参数试衣测试环境</p>
             </div>
-            <div class="flex-none">
-                <span class="text-xs bg-green-100 text-green-700 px-3 py-1 rounded-full font-bold">模式：高保真换装 (Gemini 2.0)</span>
+            <div class="w-full md:w-72">
+                <label class="block text-xs font-bold text-gray-500 uppercase">接口密钥 (API Key)</label>
+                <input type="password" id="apiKey" value="lKAyjCynPqm9tdQRmnoyjEhwWJ" class="input-style border-yellow-300 focus:ring-yellow-500" placeholder="请输入 API Key">
             </div>
         </div>
 
-        <!-- 上传区 -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
-            <!-- 1. 衣服 -->
-            <div class="bg-white p-6 rounded-3xl border shadow-sm">
-                <div class="flex items-center mb-4">
-                    <div class="w-8 h-8 bg-yellow-400 rounded-full flex items-center justify-center font-bold mr-3">1</div>
-                    <h2 class="font-bold text-lg">上传目标衣服</h2>
-                </div>
-                <div id="drop-zone-1" class="border-2 border-dashed border-gray-200 rounded-2xl p-4 text-center hover:bg-yellow-50 transition-colors cursor-pointer relative h-80 flex flex-col justify-center items-center">
-                    <input type="file" id="clothImg" accept="image/*" class="absolute inset-0 opacity-0 cursor-pointer">
-                    <div id="previewCloth" class="hidden absolute inset-0 p-2">
-                        <img class="w-full h-full object-contain rounded-xl">
-                    </div>
-                    <div class="text-gray-400">
-                        <svg class="w-12 h-12 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4" stroke-width="2" stroke-linecap="round"/></svg>
-                        <p>点击或拖入衣服图片</p>
-                        <p class="text-xs mt-1">白底图效果最佳</p>
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- 左侧：参数配置 -->
+            <div class="space-y-6">
+                <div class="setting-card">
+                    <h2 class="font-bold text-gray-800 mb-4 flex items-center">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
+                        生成设置
+                    </h2>
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">输出图像大小 (size)</label>
+                            <select id="size" class="input-style">
+                                <option value="1K">1K (标准 - 快速)</option>
+                                <option value="2K">2K (高清 - 较慢)</option>
+                                <option value="4K">4K (超清 - 耗时长)</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">图像比例 (aspectRatio)</label>
+                            <select id="aspectRatio" class="input-style">
+                                <option value="auto">auto (自动适应)</option>
+                                <option value="1:1">1:1 (正方形)</option>
+                                <option value="3:4">3:4 (竖屏-人像常用)</option>
+                                <option value="4:3">4:3 (横屏)</option>
+                                <option value="9:16">9:16 (手机全屏)</option>
+                                <option value="16:9">16:9 (电影比例)</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">提示词 (prompt)</label>
+                            <textarea id="prompt" rows="4" class="input-style" placeholder="描述换装要求...">Virtual try-on: Take the clothing from image 1 and put it onto the person in image 2. Ensure high realism, natural folds and shadows.</textarea>
+                            <p class="text-[10px] text-gray-400 mt-1">* 提示词越详细，AI 对褶皱和光影的处理越好</p>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <!-- 2. 模特 -->
-            <div class="bg-white p-6 rounded-3xl border shadow-sm">
-                <div class="flex items-center mb-4">
-                    <div class="w-8 h-8 bg-blue-400 rounded-full flex items-center justify-center font-bold text-white mr-3">2</div>
-                    <h2 class="font-bold text-lg">上传模特人像</h2>
-                </div>
-                <div id="drop-zone-2" class="border-2 border-dashed border-gray-200 rounded-2xl p-4 text-center hover:bg-blue-50 transition-colors cursor-pointer relative h-80 flex flex-col justify-center items-center">
-                    <input type="file" id="personImg" accept="image/*" class="absolute inset-0 opacity-0 cursor-pointer">
-                    <div id="previewPerson" class="hidden absolute inset-0 p-2">
-                        <img class="w-full h-full object-contain rounded-xl">
+            <!-- 中间：素材上传 -->
+            <div class="lg:col-span-2 space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- 衣服 -->
+                    <div class="bg-white p-4 rounded-2xl border shadow-sm">
+                        <label class="block font-bold text-gray-700 mb-2 italic text-sm">Image 1: 衣服图片</label>
+                        <div class="relative h-64 border-2 border-dashed border-gray-200 rounded-xl flex items-center justify-center overflow-hidden hover:bg-gray-50 transition-all cursor-pointer">
+                            <input type="file" id="clothImg" class="absolute inset-0 opacity-0 cursor-pointer z-10">
+                            <img id="view-cloth" class="hidden w-full h-full object-contain">
+                            <div id="tip-cloth" class="text-gray-400 text-center">
+                                <p class="text-2xl mb-1">👕</p>
+                                <p class="text-sm">点击上传衣服图</p>
+                            </div>
+                        </div>
                     </div>
-                    <div class="text-gray-400">
-                        <svg class="w-12 h-12 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4" stroke-width="2" stroke-linecap="round"/></svg>
-                        <p>点击或拖入模特照片</p>
-                        <p class="text-xs mt-1">尽量选择姿态清晰的照片</p>
+                    <!-- 模特 -->
+                    <div class="bg-white p-4 rounded-2xl border shadow-sm">
+                        <label class="block font-bold text-gray-700 mb-2 italic text-sm">Image 2: 模特人像</label>
+                        <div class="relative h-64 border-2 border-dashed border-gray-200 rounded-xl flex items-center justify-center overflow-hidden hover:bg-gray-50 transition-all cursor-pointer">
+                            <input type="file" id="personImg" class="absolute inset-0 opacity-0 cursor-pointer z-10">
+                            <img id="view-person" class="hidden w-full h-full object-contain">
+                            <div id="tip-person" class="text-gray-400 text-center">
+                                <p class="text-2xl mb-1">🧍</p>
+                                <p class="text-sm">点击上传模特图</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </div>
-        </div>
 
-        <!-- 执行 -->
-        <button id="generateBtn" class="w-full py-5 bg-black text-white rounded-2xl font-bold text-xl hover:bg-gray-800 transition-all shadow-xl disabled:bg-gray-400">
-            开始融合并试穿
-        </button>
+                <!-- 动作 -->
+                <button id="generateBtn" class="w-full bg-indigo-600 text-white py-5 rounded-2xl font-black text-xl hover:bg-indigo-700 shadow-xl transition-all disabled:bg-gray-300 flex items-center justify-center gap-3">
+                    <span>立即开始生成</span>
+                    <span id="btnIcon">🚀</span>
+                </button>
 
-        <!-- 结果 -->
-        <div id="resultArea" class="mt-12 hidden">
-            <h2 class="text-2xl font-bold text-center mb-8">✨ 试穿结果</h2>
-            <div id="loading" class="flex flex-col items-center py-12">
-                <div class="w-16 h-16 border-4 border-yellow-400 border-t-transparent rounded-full animate-spin mb-4"></div>
-                <p class="text-gray-500 font-medium">AI 正在计算衣服褶皱与光影...</p>
-            </div>
-            <div id="outputContainer" class="hidden bg-white p-4 rounded-3xl shadow-2xl border max-w-lg mx-auto">
-                <img id="outputImg" class="w-full rounded-2xl">
-                <div class="mt-4 flex gap-2">
-                   <a id="downloadLink" download="try-on-result.png" class="flex-1 bg-yellow-400 text-center py-3 rounded-xl font-bold hover:bg-yellow-500">保存图片</a>
-                   <button onclick="window.location.reload()" class="px-6 py-3 bg-gray-100 rounded-xl font-bold">重置</button>
+                <!-- 结果展示 -->
+                <div id="resultArea" class="hidden bg-white p-6 rounded-3xl border-2 border-indigo-100 shadow-inner min-h-[400px]">
+                    <div id="loading" class="flex flex-col items-center justify-center py-20">
+                        <div class="w-12 h-12 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+                        <p id="statusText" class="text-indigo-600 font-bold animate-pulse">正在上传素材...</p>
+                        <p id="timer" class="text-xs text-gray-400 mt-2">已耗时: 0s</p>
+                    </div>
+                    
+                    <div id="outputContainer" class="hidden">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="font-bold text-gray-800">试穿效果图：</h3>
+                            <span id="execTime" class="text-xs bg-gray-100 px-2 py-1 rounded text-gray-500">耗时: --</span>
+                        </div>
+                        <img id="outputImg" class="w-full rounded-xl shadow-lg border">
+                        <div class="mt-6 flex flex-wrap gap-3">
+                            <a id="downloadBtn" href="#" download="result.png" class="flex-1 bg-green-500 text-white text-center py-3 rounded-xl font-bold hover:bg-green-600">保存高清图</a>
+                            <button onclick="window.location.reload()" class="px-6 py-3 bg-gray-100 rounded-xl font-bold text-gray-600">重新测试</button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <script type="module">
-        import { GoogleGenerativeAI } from "@google/generative-ai";
-
-        // 辅助：文件转Base64
-        const toBase64 = (file) => new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.readAsDataURL(file);
-            reader.onload = () => resolve({
-                inlineData: { data: reader.result.split(',')[1], mimeType: file.type }
-            });
-            reader.onerror = reject;
-        });
-
-        // 预览逻辑
-        const bindPreview = (inputId, previewId) => {
+    <script>
+        // 预览与文件处理
+        function initPreview(inputId, imgId, tipId) {
             document.getElementById(inputId).addEventListener('change', function(e) {
                 const file = e.target.files[0];
                 if (file) {
-                    const preview = document.getElementById(previewId);
-                    preview.querySelector('img').src = URL.createObjectURL(file);
-                    preview.classList.remove('hidden');
+                    const url = URL.createObjectURL(file);
+                    const img = document.getElementById(imgId);
+                    img.src = url;
+                    img.classList.remove('hidden');
+                    document.getElementById(tipId).classList.add('hidden');
                 }
             });
-        };
-        bindPreview('clothImg', 'previewCloth');
-        bindPreview('personImg', 'previewPerson');
+        }
+        initPreview('clothImg', 'view-cloth', 'tip-cloth');
+        initPreview('personImg', 'view-person', 'tip-person');
 
-        // 主逻辑
-        document.getElementById('generateBtn').onclick = async () => {
-            const key = document.getElementById('apiKey').value;
+        const fileToB64 = file => new Promise((res, rej) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = () => res(reader.result);
+            reader.onerror = rej;
+        });
+
+        // 核心流程
+        const generateBtn = document.getElementById('generateBtn');
+        let startTime = 0;
+        let timerInterval;
+
+        generateBtn.onclick = async () => {
+            const currentKey = document.getElementById('apiKey').value;
+            const prompt = document.getElementById('prompt').value;
+            const size = document.getElementById('size').value;
+            const aspectRatio = document.getElementById('aspectRatio').value;
             const clothFile = document.getElementById('clothImg').files[0];
             const personFile = document.getElementById('personImg').files[0];
 
-            if (!key || !clothFile || !personFile) {
-                alert("请填入 API Key 并上传两张图片！");
-                return;
-            }
+            if (!currentKey) return alert("API Key 不能为空！");
+            if (!clothFile || !personFile) return alert("请上传衣服和模特图！");
 
-            const btn = document.getElementById('generateBtn');
-            const resultArea = document.getElementById('resultArea');
-            const loading = document.getElementById('loading');
-            const outputContainer = document.getElementById('outputContainer');
+            // UI 切换
+            generateBtn.disabled = true;
+            document.getElementById('resultArea').classList.remove('hidden');
+            document.getElementById('loading').classList.remove('hidden');
+            document.getElementById('outputContainer').classList.add('hidden');
             
-            btn.disabled = true;
-            resultArea.classList.remove('hidden');
-            loading.classList.remove('hidden');
-            outputContainer.classList.add('hidden');
+            // 计时器
+            startTime = Date.now();
+            timerInterval = setInterval(() => {
+                const s = Math.floor((Date.now() - startTime) / 1000);
+                document.getElementById('timer').innerText = `已耗时: ${s}s`;
+            }, 1000);
 
             try {
-                const genAI = new GoogleGenerativeAI(key);
-                // 使用 Gemini 2.0 Flash 实验版，它对图像编辑支持最好
-                const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-exp" });
+                // 1. 转码
+                document.getElementById('statusText').innerText = "素材转码中...";
+                const clothB64 = await fileToB64(clothFile);
+                const personB64 = await fileToB64(personFile);
 
-                const clothData = await toBase64(clothFile);
-                const personData = await toBase64(personFile);
+                // 2. 提交任务
+                document.getElementById('statusText').innerText = "任务提交至服务器...";
+                const formData = new URLSearchParams();
+                formData.append('prompt', prompt);
+                formData.append('size', size);
+                formData.append('aspectRatio', aspectRatio);
+                formData.append('urls[]', clothB64);
+                formData.append('urls[]', personB64);
 
-                // 核心 Prompt：明确指定图片 1 是衣服，图片 2 是模特
-                const prompt = `
-                    Task: Virtual Try-On.
-                    Image 1: A garment (target clothing).
-                    Image 2: A model (person).
-                    Instructions: 
-                    1. Extract the clothing item from Image 1.
-                    2. Put this specific clothing item onto the person in Image 2.
-                    3. Ensure the person's pose, face, body shape, and background remain exactly the same.
-                    4. The clothing must fit naturally, following the body contours, folds, and lighting of the model.
-                    5. Output only the final generated image of the person wearing the new clothes.
-                `;
+                const res = await fetch(`https://api.wuyinkeji.com/api/async/image_nanoBanana_pro?key=${currentKey}`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': currentKey,
+                        'Content-Type': 'application/x-www-form-urlencoded;charset:utf-8;'
+                    },
+                    body: formData
+                });
 
-                const result = await model.generateContent([prompt, clothData, personData]);
-                const response = await result.response;
-                
-                // 寻找返回结果中的图片部分
-                const imagePart = response.candidates[0].content.parts.find(p => p.inlineData);
-                
-                if (imagePart) {
-                    const base64Data = `data:${imagePart.inlineData.mimeType};base64,${imagePart.inlineData.data}`;
-                    document.getElementById('outputImg').src = base64Data;
-                    document.getElementById('downloadLink').href = base64Data;
-                    loading.classList.add('hidden');
-                    outputContainer.classList.remove('hidden');
-                    // 滚动到结果区
-                    outputContainer.scrollIntoView({ behavior: 'smooth' });
-                } else {
-                    // 兜底方案：如果模型只返回了文字描述
-                    throw new Error("模型仅返回了描述文字，未能生成图像。请确保您的 API Key 拥有 Gemini 2.0 图像生成权限（通常需要 Image Modality 开启）。");
-                }
+                const data = await res.json();
+                if (data.code !== 200) throw new Error(data.msg || "提交失败");
+
+                const taskId = data.data.id;
+                pollStatus(taskId, currentKey);
 
             } catch (err) {
-                console.error(err);
-                alert("生成失败：" + err.message);
-                resultArea.classList.add('hidden');
-            } finally {
-                btn.disabled = false;
+                alert("发生错误: " + err.message);
+                resetUI();
             }
         };
+
+        async function pollStatus(id, key) {
+            const statusText = document.getElementById('statusText');
+            
+            const checker = setInterval(async () => {
+                try {
+                    const res = await fetch(`https://api.wuyinkeji.com/api/async/query?key=${key}&id=${id}`);
+                    const result = await res.json();
+
+                    if (result.code === 200) {
+                        clearInterval(checker);
+                        clearInterval(timerInterval);
+                        showResult(result);
+                    } else if (result.code === 102) {
+                        statusText.innerText = "AI 正在绘制您的衣服 (10-30s)...";
+                    } else if (result.code !== 101 && result.code !== 102) {
+                        clearInterval(checker);
+                        alert("API 返回错误: " + result.msg);
+                        resetUI();
+                    }
+                } catch (e) {
+                    console.error("查询失败", e);
+                }
+            }, 3000);
+        }
+
+        function showResult(json) {
+            // 注意：API 返回的图片路径通常在 result.data 或 result.data.url
+            const url = json.data.url || json.data;
+            document.getElementById('outputImg').src = url;
+            document.getElementById('downloadBtn').href = url;
+            document.getElementById('execTime').innerText = `耗时: ${json.exec_time || '--'}s`;
+            
+            document.getElementById('loading').classList.add('hidden');
+            document.getElementById('outputContainer').classList.remove('hidden');
+            generateBtn.disabled = false;
+        }
+
+        function resetUI() {
+            generateBtn.disabled = false;
+            document.getElementById('resultArea').classList.add('hidden');
+            clearInterval(timerInterval);
+        }
     </script>
 </body>
 </html>
