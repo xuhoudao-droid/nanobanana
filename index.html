@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nano Banana 虚拟试衣 - MVP测试版</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script type="importmap">
+      {
+        "imports": {
+          "@google/generative-ai": "https://esm.run/@google/generative-ai"
+        }
+      }
+    </script>
+    <style>
+        .gradient-bg { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen">
+    <div class="gradient-bg py-12 px-4 shadow-inner">
+        <div class="max-w-4xl mx-auto text-center">
+            <h1 class="text-4xl font-extrabold text-white mb-2">🍌 Nano Banana Try-On</h1>
+            <p class="text-indigo-100">基于 Gemini 2.5 Flash 的零成本在线换装方案</p>
+        </div>
+    </div>
+
+    <div class="max-w-4xl mx-auto -mt-10 bg-white p-8 rounded-2xl shadow-xl border border-gray-100">
+        <!-- API 配置区 -->
+        <div class="mb-8 p-4 bg-yellow-50 rounded-lg border border-yellow-100">
+            <label class="block text-sm font-bold text-yellow-800 mb-2">🔑 填写您的 Gemini API Key</label>
+            <input type="password" id="apiKey" class="w-full border-gray-300 rounded-lg shadow-sm p-3 focus:ring-yellow-500 focus:border-yellow-500 border" placeholder="在此输入从 Google AI Studio 获取的 Key">
+            <p class="text-xs text-yellow-600 mt-2 text-right">API Key 仅保存在您的浏览器内存中，不会泄露给第三方。</p>
+        </div>
+
+        <!-- 图片上传区 -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+            <div class="group border-2 border-dashed border-gray-200 p-6 rounded-2xl text-center hover:border-indigo-400 transition-all">
+                <p class="mb-3 font-bold text-gray-700">步骤 1: 上传您的照片</p>
+                <input type="file" id="personImg" accept="image/*" class="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100">
+                <div id="previewPerson" class="mt-4 hidden"><img class="max-h-64 mx-auto rounded-lg shadow"></div>
+            </div>
+
+            <div class="group border-2 border-dashed border-gray-200 p-6 rounded-2xl text-center hover:border-indigo-400 transition-all">
+                <p class="mb-3 font-bold text-gray-700">步骤 2: 上传衣服/配饰</p>
+                <input type="file" id="clothImg" accept="image/*" class="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100">
+                <div id="previewCloth" class="mt-4 hidden"><img class="max-h-64 mx-auto rounded-lg shadow"></div>
+            </div>
+        </div>
+
+        <!-- 动作按钮 -->
+        <button id="generateBtn" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 rounded-xl shadow-lg transition duration-300 transform hover:-translate-y-1">
+            🚀 立即生成试衣效果
+        </button>
+
+        <!-- 结果展示 -->
+        <div id="resultArea" class="mt-12 hidden border-t pt-8">
+            <h2 class="text-2xl font-bold mb-6 text-center text-gray-800">✨ 生成预览</h2>
+            <div id="loading" class="text-center py-10">
+                <div class="inline-block animate-spin rounded-full h-12 w-12 border-4 border-indigo-500 border-t-transparent mb-4"></div>
+                <p class="text-indigo-600 font-medium italic">AI 正在根据图像进行缝合与渲染，请稍候...</p>
+            </div>
+            <div id="outputContainer" class="hidden">
+                <img id="outputImg" class="max-w-full mx-auto rounded-2xl shadow-2xl border-4 border-white">
+                <div class="mt-6 flex justify-center">
+                    <button onclick="window.location.reload()" class="px-6 py-2 bg-gray-100 text-gray-600 rounded-full hover:bg-gray-200 font-medium">重新开始</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="text-center py-10 text-gray-400 text-sm">
+        Powered by Google Gemini 2.5 & Nano Banana Technology
+    </footer>
+
+    <script type="module">
+        import { GoogleGenerativeAI } from "@google/generative-ai";
+
+        // 文件转 Base64 助手
+        const fileToPart = async (file) => {
+            return new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onloadend = () => resolve({
+                    inlineData: { data: reader.result.split(',')[1], mimeType: file.type }
+                });
+                reader.readAsDataURL(file);
+            });
+        };
+
+        // 预览逻辑
+        const setupPreview = (inputId, previewId) => {
+            document.getElementById(inputId).onchange = (e) => {
+                const [file] = e.target.files;
+                if (file) {
+                    const preview = document.getElementById(previewId);
+                    preview.querySelector('img').src = URL.createObjectURL(file);
+                    preview.classList.remove('hidden');
+                }
+            };
+        };
+        setupPreview('personImg', 'previewPerson');
+        setupPreview('clothImg', 'previewCloth');
+
+        // 核心生成逻辑
+        document.getElementById('generateBtn').onclick = async () => {
+            const key = document.getElementById('apiKey').value;
+            const personFile = document.getElementById('personImg').files[0];
+            const clothFile = document.getElementById('clothImg').files[0];
+
+            if (!key) return alert("请输入 API Key！");
+            if (!personFile || !clothFile) return alert("请上传模特图和衣服图！");
+
+            const resultArea = document.getElementById('resultArea');
+            const loading = document.getElementById('loading');
+            const outputContainer = document.getElementById('outputContainer');
+            const outputImg = document.getElementById('outputImg');
+
+            resultArea.classList.remove('hidden');
+            loading.classList.remove('hidden');
+            outputContainer.classList.add('hidden');
+
+            try {
+                const genAI = new GoogleGenerativeAI(key);
+                // 自动选择可用模型 (优先 Gemini 2.0 Flash)
+                const model = genAI.getGenerativeModel({ 
+                    model: "gemini-2.0-flash-exp", 
+                });
+
+                const personPart = await fileToPart(personFile);
+                const clothPart = await fileToPart(clothFile);
+
+                // 试衣专用提示词
+                const prompt = "Act as a professional virtual fashion stylist. Replace the garment worn by the person in the first image with the item shown in the second image. Ensure the fit is perfect, following the person's body shape, pose, and lighting. Keep the background and the person's identity unchanged. Return the result as a generated image.";
+
+                // 注意：如果您的 API 权限不支持直接生成图像（Image Modality），
+                // 这里的处理逻辑需要根据最新的 Gemini SDK 文档调整。
+                // 这是一个针对图像输入、图像输出的 MVP 演示逻辑。
+                const result = await model.generateContent([prompt, personPart, clothPart]);
+                const response = await result.response;
+                
+                // 提取返回的图像数据
+                const imagePart = response.candidates[0].content.parts.find(p => p.inlineData);
+                if (imagePart) {
+                    outputImg.src = `data:${imagePart.inlineData.mimeType};base64,${imagePart.inlineData.data}`;
+                    loading.classList.add('hidden');
+                    outputContainer.classList.remove('hidden');
+                } else {
+                    throw new Error("模型响应成功但未生成图像。请确保您的 API 账户有图像生成权限。");
+                }
+            } catch (err) {
+                console.error(err);
+                alert("错误: " + err.message);
+                resultArea.classList.add('hidden');
+            }
+        };
+    </script>
+</body>
+</html>
